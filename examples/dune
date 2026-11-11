@@ -9,16 +9,25 @@
   sampling_and_shuffling
   avoiding_zero_draws
   state_duplication)
+ (modules
+  seeding_and_backends
+  capture_and_replay
+  bulk_bigarray_fill
+  sampling_and_shuffling
+  avoiding_zero_draws
+  state_duplication)
  (libraries xoshiro-simd))
 
 ;; This example forks so it needs unix. It works on OCaml 4 and 5.
 (executable
  (name forking_streams)
+ (modules forking_streams)
  (libraries xoshiro-simd unix))
 
 ;; This example uses domains, and so only works on OCaml 5+.
 (executable
  (name splitting_streams)
+ (modules splitting_streams)
  (enabled_if
   (>= %{ocaml_version} 5))
  (libraries xoshiro-simd))
