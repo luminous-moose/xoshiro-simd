@@ -211,7 +211,11 @@
   check_exported_symbols.sh
   ../lib/libxoshiro_simd_stubs.a)
  (action
-  (run bash check_exported_symbols.sh ../lib/libxoshiro_simd_stubs.a)))
+  (run
+   bash
+   check_exported_symbols.sh
+   ../lib/libxoshiro_simd_stubs.a
+   %{ocaml-config:c_compiler})))
 
 ;; Reads the real, dune-generated user_extra_cflags.sexp (produced by the
 ;; XOSHIRO_SIMD_EXTRA_CFLAGS rule in lib/dune) and checks it against a

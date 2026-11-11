@@ -13,6 +13,29 @@ if [ "$(uname -s)" = Darwin ]; then
 fi
 
 archive=$1
+# Optional: OCaml's C compiler (dune passes %{ocaml-config:c_compiler}).
+c_compiler=${2:-}
+
+# A cross toolchain such as mingw-w64's may install only prefixed binutils
+# (x86_64-w64-mingw32-nm), with no plain nm on PATH: opam-repo-ci's Cygwin
+# worker is like that. So try nm, then nm with the C compiler's prefix, and
+# skip, saying so, if neither exists rather than fail a user's install.
+nm=
+if command -v nm >/dev/null 2>&1; then
+  nm=nm
+else
+  cc_cmd=${c_compiler%% *}
+  case $cc_cmd in
+    *-gcc | *-cc | *-clang)
+      prefixed=${cc_cmd%-*}-nm
+      if command -v "$prefixed" >/dev/null 2>&1; then nm=$prefixed; fi
+      ;;
+  esac
+fi
+if [ -z "$nm" ]; then
+  echo "skip: check_exported_symbols.sh found no nm (C compiler: ${c_compiler:-unknown})"
+  exit 0
+fi
 
 # __x86.get_pc_thunk.{ax,bx,cx,dx,si,di} (older gcc: __i686.get_pc_thunk.*)
 # are compiler-synthesized, not project code: on i386 -fPIC, GCC emits these
@@ -50,7 +73,7 @@ archive=$1
 # rejecting it was swallowed the same way). It isn't needed: undefined symbols
 # are printed without an address, so the awk's hex-address test on the first
 # field already drops them, along with the per-member "file.o:" header lines.
-symbols=$(nm -g "$archive")
+symbols=$("$nm" -g "$archive")
 bad=$(printf '%s\n' "$symbols" | awk '
   $1 ~ /^[0-9a-fA-F]+$/ {
     name = $NF
