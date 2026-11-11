@@ -31,3 +31,30 @@ jobs:
       - run: opam install ./xoshiro-simd.opam --deps-only --with-test
       - run: opam exec -- dune build
       - run: opam exec -- dune test
+
+  # Like opam-repo-ci's lower-bounds job: every dependency (dune and the test
+  # libraries included) at the oldest version the opam file allows, then the
+  # opam file's own build command. Catches dune files that only newer dune
+  # accepts, which the build job above can't see.
+  lower-bounds:
+    strategy:
+      fail-fast: false
+      matrix:
+        ocaml-compiler:
+          - "4.13"
+          - "5.4"
+    runs-on: ubuntu-24.04
+    env:
+      OPAMCRITERIA: "+removed,+count[version-lag,solution]"
+      OPAMFIXUPCRITERIA: "+removed,+count[version-lag,solution]"
+      OPAMUPGRADECRITERIA: "+removed,+count[version-lag,solution]"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: ${{ matrix.ocaml-compiler }}
+      # The solver opam-repo-ci uses for these criteria.
+      - run: opam option solver=builtin-0install
+      - run: opam install ./xoshiro-simd.opam --deps-only --with-test
+      - run: opam list
+      - run: opam exec -- dune build -p xoshiro-simd @install @runtest

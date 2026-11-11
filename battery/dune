@@ -69,6 +69,16 @@
   (flags :standard -I.)
   (extra_deps bit_reverse_table.h)))
 
+;; ocaml_battery compiles bit_reverse.c under another name. If both executables
+;; listed bit_reverse, both would produce bit_reverse.o in this directory, and
+;; dune before about 3.20 reports that as a clash even though ocaml_battery is
+;; disabled outside the battery profile. (A C-only library shared by both
+;; doesn't work: its archive lands before the executables' own objects on the
+;; link line, so their references to xoshiro_bitreverse64 stay undefined.)
+(rule
+ (action
+  (copy bit_reverse.c bit_reverse_battery.c)))
+
 (rule
  (alias runtest)
  (action
@@ -82,7 +92,7 @@
  (libraries xoshiro_simd cmdliner hex)
  (foreign_stubs
   (language c)
-  (names bit_reverse float_bitbin ocaml_bridge)
+  (names bit_reverse_battery float_bitbin ocaml_bridge)
   (flags :standard -I. -Ipractrand_src/PractRand/include)
   (extra_deps
    (source_tree practrand_src)
