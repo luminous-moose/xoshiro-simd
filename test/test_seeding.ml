@@ -560,13 +560,19 @@ let%test_unit
    control), then confirm recover_seed_bytes reconstructs exactly the
    original seed bytes. *)
 
+(* Stdlib.Random.State.bits64 is OCaml 4.14+, so build 64 bits from three
+   30-bit draws (30 + 30 + 4 bits). *)
+let random_bits64 rand_state =
+  let draw () = Stdlib.Int64.of_int (Stdlib.Random.State.bits rand_state) in
+  let a = draw () and b = draw () and c = draw () in
+  Stdlib.Int64.(
+    logor (shift_left a 34) (logor (shift_left b 4) (logand c 0xFL)))
+
 let%test_unit
     "init_string: recover_seed_bytes round-trips on random 32-byte seeds" =
   let rand_state = Stdlib.Random.State.make [| 0xc0ffee |] in
   for _ = 1 to 5000 do
-    let words =
-      Array.init 4 ~f:(fun _ -> Stdlib.Random.State.bits64 rand_state)
-    in
+    let words = Array.init 4 ~f:(fun _ -> random_bits64 rand_state) in
     let seed_bytes = le64_seed_bytes words in
     let state = Xs_S.init_string (Bytes.to_string seed_bytes) in
     let recovered = Xs_S.recover_seed_bytes state in
@@ -577,9 +583,7 @@ let%test_unit
     "init_int64array: recover_seed_bytes round-trips on random 4-int64 seeds" =
   let rand_state = Stdlib.Random.State.make [| 0xc0ffee + 1 |] in
   for _ = 1 to 5000 do
-    let arr =
-      Array.init 4 ~f:(fun _ -> Stdlib.Random.State.bits64 rand_state)
-    in
+    let arr = Array.init 4 ~f:(fun _ -> random_bits64 rand_state) in
     let state = Xs_S.init_int64array arr in
     let recovered = Xs_S.recover_seed_bytes state in
     assert (String.equal recovered (Bytes.to_string (le64_seed_bytes arr)))
@@ -616,9 +620,7 @@ let%test_unit
      with zero words" =
   let rand_state = Stdlib.Random.State.make [| 0xc0ffee + 3 |] in
   for len = 1 to 4 do
-    let arr =
-      Array.init len ~f:(fun _ -> Stdlib.Random.State.bits64 rand_state)
-    in
+    let arr = Array.init len ~f:(fun _ -> random_bits64 rand_state) in
     let padded = Array.append arr (Array.create ~len:(4 - len) 0L) in
     let recovered = Xs_S.recover_seed_bytes (Xs_S.init_int64array arr) in
     if not (String.equal recovered (Bytes.to_string (le64_seed_bytes padded)))
