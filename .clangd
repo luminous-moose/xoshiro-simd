@@ -1,0 +1,23 @@
+CompileFlags:
+  CompilationDatabase: .
+  Remove: [-fanalyzer]
+
+Diagnostics:
+  ClangTidy:
+    Add:
+      - readability-uppercase-literal-suffix
+      - readability-isolate-declaration
+      - readability-braces-around-statements
+      - readability-else-after-return
+
+---
+If:
+  PathMatch: .*_stubs\.c
+Diagnostics:
+  Suppress: [readability-isolate-declaration]
+
+---
+If:
+  PathMatch: .*xs256_core_neon\.(c|h)
+CompileFlags:
+  Add: [--target=aarch64-linux-gnu, --sysroot=/usr/aarch64-linux-gnu]

@@ -1,0 +1,10 @@
+intrange-backends: estimated run time 4m15.0s (8 tests x 16 reps x 1.0s quota, 1.0s sleep between runs)
+Test                                                        Mean (ns)  StdDev (ns)  SEM (ns)
+intrange-backends/stdlib-dls                                    24.04        2.09      0.52
+intrange-backends/xoshiro-simd-avx2-lemire-dls                  13.70        1.77      0.44
+intrange-backends/stdlib                                        21.10        1.89      0.47
+intrange-backends/xoshiro-simd-lemire-plain                      9.58        1.28      0.32
+intrange-backends/xoshiro-simd-avx2-int_lemire_native-auto       8.82        1.10      0.27
+intrange-backends/xoshiro-simd-avx2-int_lemire_c-auto           12.38        1.65      0.41
+intrange-backends/xoshiro-simd-int_lemire_native-sse2            9.13        1.01      0.25
+intrange-backends/xoshiro-simd-int_lemire_c-sse2                11.69        1.22      0.30

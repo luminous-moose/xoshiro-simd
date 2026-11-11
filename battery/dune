@@ -1,0 +1,117 @@
+;; OCaml-driven battery harness: exercises the real public Xoshiro_simd API,
+;; not internal C entry points, via the OCaml-callback bridge in
+;; ocaml_bridge.h/.c. An earlier direct-C harness testing those internal
+;; entry points directly has been removed -- this is now the only battery
+;; harness in this directory.
+;;
+;; Prerequisites (not dune-managed, see this directory's Makefile and its
+;; own header comment):
+;;   sudo apt-get install -y libtestu01-0-dev testu01-bin testu01-data
+;;   make practrand_src && make PractRand.a
+;;
+;; Not part of the default `dune build`/`@runtest` -- opt-in, like the
+;; plain-C battery binaries in this same directory.
+
+;; practrand_src/ and PractRand.a are not dune-tracked sources (see
+;; .gitignore and this directory's Makefile) -- built externally by `make
+;; practrand_src && make PractRand.a` before `dune build` runs. A compiler
+;; `-I` flag (or a linker path in link_flags) isn't a tracked dune
+;; dependency on its own, so dune never mirrors these into its build
+;; sandbox unless told to -- fixed via `extra_deps` on the foreign_stubs
+;; stanza that needs practrand_src/, and on PractRand.a below (needed by
+;; the final link step, which runs from _build/default, not
+;; _build/default/battery -- hence the "battery/" prefix on the link_flags
+;; path, unlike the plain relative -I paths above).
+
+;; (optional) doesn't help here: it only lets dune skip an executable
+;; whose declared *library* (findlib) dependencies are unavailable, not one
+;; whose extra_deps/link_flags reference a file that doesn't exist yet
+;; (confirmed directly -- a bare `dune build` with no PractRand.a present
+;; still hard-fails with (optional) alone: "No rule found for
+;; battery/PractRand.a"). An env-var-gated enabled_if (the pattern
+;; lib/dune already uses for XOSHIRO_SIMD_EXTRA_CFLAGS) doesn't work either
+;; here without bumping this project's (lang dune 3.10) to 3.15+
+;; (%{env:...} inside enabled_if needs it) -- a project-wide version floor
+;; change not worth making just for this. `profile` is one of the fixed
+;; variables enabled_if has always supported for executables, and dune
+;; profiles are exactly meant for "select which optional part of the
+;; build to include" -- so a bare `dune build`/`dune runtest` (default
+;; profile `dev`) never even attempts to resolve PractRand.a; building
+;; this needs an explicit, separate profile:
+;;   dune build --profile battery battery/ocaml_battery.exe
+
+;; gen_bitreverse_table.exe prints bit_reverse_table.h to stdout -- the
+;; 256-entry byte-bitreversal table bit_reverse.c includes, generated from
+;; a short OCaml loop instead of hand-typed C literals. (modules ...) on
+;; both this and the ocaml_battery executable below partitions the two
+;; .ml files in this directory between the two stanzas; without it, dune
+;; would try to put gen_bitreverse_table.ml into both.
+(executable
+ (name gen_bitreverse_table)
+ (modules gen_bitreverse_table))
+
+(rule
+ (target bit_reverse_table.h)
+ (action
+  (with-stdout-to
+   bit_reverse_table.h
+   (run %{exe:gen_bitreverse_table.exe}))))
+
+;; Checks xoshiro_bitreverse64 against a bit-by-bit OCaml reference. It
+;; needs neither TestU01 nor PractRand, so it is not gated on the battery
+;; profile and runs with plain `dune runtest`.
+(executable
+ (name test_bit_reverse)
+ (modules test_bit_reverse)
+ (foreign_stubs
+  (language c)
+  (names bit_reverse test_bit_reverse_stubs)
+  (flags :standard -I.)
+  (extra_deps bit_reverse_table.h)))
+
+(rule
+ (alias runtest)
+ (action
+  (run %{exe:test_bit_reverse.exe})))
+
+(executable
+ (name ocaml_battery)
+ (modules ocaml_battery)
+ (enabled_if
+  (= %{profile} battery))
+ (libraries xoshiro_simd cmdliner hex)
+ (foreign_stubs
+  (language c)
+  (names bit_reverse float_bitbin ocaml_bridge)
+  (flags :standard -I. -Ipractrand_src/PractRand/include)
+  (extra_deps
+   (source_tree practrand_src)
+   bit_reverse_table.h))
+ (foreign_stubs
+  (language cxx)
+  (names ocaml_battery_stubs ocaml_practrand_driver)
+  (flags
+   :standard
+   -std=c++11
+   -I.
+   -Ipractrand_src/PractRand/include
+   -Ipractrand_src/PractRand/tools
+   -I/usr/include/testu01)
+  (extra_deps
+   (source_tree practrand_src)
+   PractRand.a))
+ (link_flags
+  (-cclib
+   -lstdc++
+   -cclib
+   -pthread
+   -cclib
+   -ltestu01
+   -cclib
+   -ltestu01probdist
+   -cclib
+   -ltestu01mylib
+   -cclib
+   -lm
+   -cclib
+   "battery/PractRand.a")))

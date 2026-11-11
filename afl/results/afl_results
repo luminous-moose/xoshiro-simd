@@ -1,0 +1,39 @@
+[+] Here are some useful stats:
+
+    Test case count : 7 favored, 0 variable, 17 ignored, 49 total
+       Bitmap range : 588 to 901 bits (average: 834.71 bits)
+        Exec timing : 786 to 1371 us (average: 858 us)
+
+[*] No -t option specified, so I'll use an exec timeout of 20 ms.
+[+] All set and ready to roll!
+
+
+            american fuzzy lop ++4.09c {default} (./harness) [fast]
+┌─ process timing ────────────────────────────────────┬─ overall results ────┐
+│        run time : 0 days, 1 hrs, 33 min, 13 sec     │  cycles done : 102   │
+│   last new find : 0 days, 1 hrs, 32 min, 58 sec     │ corpus count : 67    │
+│last saved crash : none seen yet                     │saved crashes : 0     │
+│ last saved hang : none seen yet                     │  saved hangs : 0     │
+├─ cycle progress ─────────────────────┬─ map coverage┴──────────────────────┤
+│  now processing : 50.4954 (74.6%)    │    map density : 38.12% / 47.25%    │
+│  runs timed out : 0 (0.00%)          │ count coverage : 3.03 bits/tuple    │
+├─ stage progress ─────────────────────┼─ findings in depth ─────────────────┤
+│  now trying : havoc                  │ favored items : 8 (11.94%)          │
+│ stage execs : 73/114 (64.04%)        │  new edges on : 13 (19.40%)         │
+│ total execs : 3.18M                  │ total crashes : 0 (0 saved)         │
+│  exec speed : 0.00/sec (zzzz...)     │  total tmouts : 5 (0 saved)         │
+├─ fuzzing strategy yields ────────────┴─────────────┬─ item geometry ───────┤
+│   bit flips : disabled (default, enable with -D)   │    levels : 3         │
+│  byte flips : disabled (default, enable with -D)   │   pending : 0         │
+│ arithmetics : disabled (default, enable with -D)   │  pend fav : 0         │
+│  known ints : disabled (default, enable with -D)   │ own finds : 18        │
+│  dictionary : n/a                                  │  imported : 0         │
+│havoc/splice : 12/1.13M, 6/2.04M                    │ stability : 100.00%   │
+│py/custom/rq : unused, unused, unused, unused       ├───────────────────────┘
+│    trim/eff : 15.17%/332, disabled                 │          [cpu000: 62%]
+└─ strategy: exploit ────────── state: finished... ──┘
+
++++ Testing aborted programmatically +++
+[+] We're done here. Have a nice day!
+
+

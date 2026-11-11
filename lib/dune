@@ -1,0 +1,249 @@
+;; C flags generation, conditional on OS, compiler, and hardware.
+
+;; Link -lbcrypt on native Windows (mingw) builds, as BCryptGenRandom lives in
+;; bcrypt.dll there. Not needed elsewhere. Unix gets entropy from
+;; getrandom()/getentropy()/dev/urandom, all libc-provided.
+(rule
+ (enabled_if
+  (or
+   (= %{system} mingw64)
+   (= %{system} mingw)))
+ (action
+  (with-stdout-to
+   c_library_flags.sexp
+   (echo "(-lbcrypt)"))))
+
+(rule
+ (enabled_if
+  (not
+   (or
+    (= %{system} mingw64)
+    (= %{system} mingw))))
+ (action
+  (with-stdout-to
+   c_library_flags.sexp
+   (echo "()"))))
+
+;; XOSHIRO_SIMD_HAS_<ISA> defines: consumed only by xs256_dispatch.h and
+;; xs256_dispatch.c. These defines are not indicating what a specific CPU
+;; supports, but rather what its ISA supports: runtime detection handles the
+;; former. All SIMD backends for an ISA are compiled in on that ISA, and these
+;; defines tell xs256_dispatch.c/h which ones those are.
+(rule
+ (enabled_if
+  (or
+   (= %{ocaml-config:architecture} "amd64")
+   (= %{ocaml-config:architecture} "i386")))
+ (action
+  (with-stdout-to
+   simd_defines.sexp
+   (echo
+    "(-DXOSHIRO_SIMD_HAS_SSE2 -DXOSHIRO_SIMD_HAS_AVX2 -DXOSHIRO_SIMD_HAS_AVX512FVL)"))))
+
+(rule
+ (enabled_if
+  (or
+   (= %{ocaml-config:architecture} "arm64")
+   (= %{ocaml-config:architecture} "arm")))
+ (action
+  (with-stdout-to
+   simd_defines.sexp
+   (echo "(-DXOSHIRO_SIMD_HAS_NEON)"))))
+
+(rule
+ (enabled_if
+  (not
+   (or
+    (= %{ocaml-config:architecture} "amd64")
+    (= %{ocaml-config:architecture} "i386")
+    (= %{ocaml-config:architecture} "arm64")
+    (= %{ocaml-config:architecture} "arm"))))
+ (action
+  (with-stdout-to
+   simd_defines.sexp
+   (echo "()"))))
+
+;; i386 only: in the plain C backend, the compiler uses the x87 FPU,
+;; which is 80 bits and causes floats to round differently, causing a different
+;; output on that platform. Since we want all platforms to have identical
+;; output, we pass this flag that forces a real memory round-trip on every store
+;; and eliminates that problem.
+(rule
+ (enabled_if
+  (= %{ocaml-config:architecture} "i386"))
+ (action
+  (with-stdout-to
+   plain_fpmath_flags.sexp
+   (echo "(-ffloat-store)"))))
+
+(rule
+ (enabled_if
+  (not
+   (= %{ocaml-config:architecture} "i386")))
+ (action
+  (with-stdout-to
+   plain_fpmath_flags.sexp
+   (echo "()"))))
+
+;; Each SIMD backend gets its own SIMD_mflag.sexp with a -m flag that enables
+;; only the needed level when compiling that backend. We are grouping amd64 and
+;; i386, for simplicity, so amd64's SSE2 backend gets that flag even though it
+;; doesn't need it: it does no harm to include it.
+(rule
+ (enabled_if
+  (or
+   (= %{ocaml-config:architecture} "amd64")
+   (= %{ocaml-config:architecture} "i386")))
+ (targets sse2_mflag.sexp avx2_mflag.sexp avx512fvl_mflag.sexp)
+ (action
+  (progn
+   (with-stdout-to
+    sse2_mflag.sexp
+    (echo "(-msse2)"))
+   (with-stdout-to
+    avx2_mflag.sexp
+    (echo "(-mavx2)"))
+   (with-stdout-to
+    avx512fvl_mflag.sexp
+    (echo "(-mavx512f -mavx512vl -mavx512dq)")))))
+
+(rule
+ (enabled_if
+  (not
+   (or
+    (= %{ocaml-config:architecture} "amd64")
+    (= %{ocaml-config:architecture} "i386"))))
+ (targets sse2_mflag.sexp avx2_mflag.sexp avx512fvl_mflag.sexp)
+ (action
+  (progn
+   (with-stdout-to
+    sse2_mflag.sexp
+    (echo "()"))
+   (with-stdout-to
+    avx2_mflag.sexp
+    (echo "()"))
+   (with-stdout-to
+    avx512fvl_mflag.sexp
+    (echo "()")))))
+
+;; NEON is mandatory on arm64, so no need for a flag there, only on 32-bit arm.
+;; Unlike the above, we don't need to group arm32 and arm64 together because
+;; at the moment, we don't have any other ARM SIMD backends to pass flags for.
+(rule
+ (enabled_if
+  (= %{ocaml-config:architecture} "arm"))
+ (action
+  (with-stdout-to
+   neon_mflag.sexp
+   (echo "(-mfpu=neon)"))))
+
+(rule
+ (enabled_if
+  (not
+   (= %{ocaml-config:architecture} "arm")))
+ (action
+  (with-stdout-to
+   neon_mflag.sexp
+   (echo "()"))))
+
+;; This is a user opt-in for any extra C flags, using the environment variable
+;; XOSHIRO_SIMD_EXTRA_CFLAGS, e.g. `XOSHIRO_SIMD_EXTRA_CFLAGS=-O3 dune build`.
+(rule
+ (action
+  (with-stdout-to
+   user_extra_cflags.sexp
+   (run
+    bash
+    "-c"
+    "if [ -n \"$1\" ]; then printf '(%s)' \"$1\"; else printf '()'; fi"
+    "bash"
+    %{env:XOSHIRO_SIMD_EXTRA_CFLAGS=}))))
+
+;; C compiler flags shared by all foreign_stubs stanzas. -ffp-contract=off is to
+;; prevent the compiler from silently using FMA instructions, available on many
+;; but not all supported CPUs, which round once instead of twice and can change
+;; the exact output. We want every backend to produce exactly the same output.
+(rule
+ (action
+  (with-stdout-to
+   common_cflags.sexp
+   (echo
+    "(-O2
+      -ffp-contract=off
+      -Wall
+      -Wextra
+      -Wnull-dereference
+      -Wundef
+      -Wstrict-aliasing=2)
+     "))))
+
+;; Select different dls_compat implementations for OCaml 5+ and OCaml 4. There
+;; is a test to ensure the correct one has loaded.
+(rule
+ (enabled_if
+  (>= %{ocaml_version} 5))
+ (action
+  (copy dls_compat.ocaml5.ml dls_compat.ml)))
+
+(rule
+ (enabled_if
+  (< %{ocaml_version} 5))
+ (action
+  (copy dls_compat.ocaml4.ml dls_compat.ml)))
+
+(library
+ (name xoshiro_simd)
+ (public_name xoshiro-simd)
+ (modules
+  xoshiro_simd
+  c_intf
+  rand_core
+  rand_core_intf
+  rand_impl
+  rand_default
+  dls_compat
+  mix_entropy_inverse)
+ (foreign_stubs
+  (language c)
+  (names xs256_common xs256_dispatch xs256_stubs xs256_core_plain_c)
+  (flags
+   :standard
+   (:include common_cflags.sexp)
+   (:include simd_defines.sexp)
+   (:include plain_fpmath_flags.sexp)
+   (:include user_extra_cflags.sexp)))
+ (foreign_stubs
+  (language c)
+  (names xs256_core_sse2)
+  (flags
+   :standard
+   (:include common_cflags.sexp)
+   (:include sse2_mflag.sexp)
+   (:include user_extra_cflags.sexp)))
+ (foreign_stubs
+  (language c)
+  (names xs256_core_avx2)
+  (flags
+   :standard
+   (:include common_cflags.sexp)
+   (:include avx2_mflag.sexp)
+   (:include user_extra_cflags.sexp)))
+ (foreign_stubs
+  (language c)
+  (names xs256_core_avx512fvl)
+  (flags
+   :standard
+   (:include common_cflags.sexp)
+   (:include avx512fvl_mflag.sexp)
+   (:include user_extra_cflags.sexp)))
+ (foreign_stubs
+  (language c)
+  (names xs256_core_neon)
+  (flags
+   :standard
+   (:include common_cflags.sexp)
+   (:include neon_mflag.sexp)
+   (:include user_extra_cflags.sexp)))
+ (c_library_flags
+  (:include c_library_flags.sexp))
+ (flags :standard))

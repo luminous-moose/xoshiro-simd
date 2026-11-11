@@ -1,0 +1,8 @@
+intrange-high-backends: estimated run time 1m36.0s (6 tests x 16 reps x 1.0s quota)
+Test                                           Mean (ns)  StdDev (ns)  SEM (ns)
+intrange-high-backends/stdlib-dls                 254.96        0.70      0.18
+intrange-high-backends/xoshiro-simd-neon-dls      157.76        2.15      0.54
+intrange-high-backends/stdlib                     255.20        0.53      0.13
+intrange-high-backends/xoshiro-simd-plain         143.36        0.66      0.16
+intrange-high-backends/xoshiro-simd-neon-auto     125.36        1.06      0.26
+intrange-high-backends/xoshiro-simd-neon          125.15        0.60      0.15

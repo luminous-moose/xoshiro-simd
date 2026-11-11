@@ -1,0 +1,238 @@
+(library
+ (name xoshiro_simd_tests)
+ (modules
+  float_fmt
+  list_extra
+  test_sampling
+  test_primitives
+  test_numeric
+  test_backend
+  test_state
+  test_seeding
+  seed_reverse
+  test_vectors
+  lemire_ref
+  test_lemire_reference)
+ (libraries base stdio hex unix compiler-libs.common xoshiro-simd)
+ (foreign_stubs
+  (language c)
+  (names lemire_ref_stubs))
+ (inline_tests
+  (deps
+   (glob_files ../testvectors/*.txt))
+  (flags
+   (:include runner_flags.sexp)))
+ (flags :standard -alert -testing)
+ (preprocess
+  (pps ppx_expect ppx_inline_test)))
+
+;; ppx_inline_test's built-in word-size tags only mark a test; the runner
+;; drops nothing but "disabled" unless told to, so pass the matching -drop-tag
+;; here. A test tagged [@tags "64-bits-only"] then doesn't run on 32-bit hosts.
+(rule
+ (enabled_if %{arch_sixtyfour})
+ (action
+  (with-stdout-to
+   runner_flags.sexp
+   (echo "(-drop-tag 32-bits-only)"))))
+
+(rule
+ (enabled_if
+  (not %{arch_sixtyfour}))
+ (action
+  (with-stdout-to
+   runner_flags.sexp
+   (echo "(-drop-tag 64-bits-only)"))))
+
+(test
+ (name test_init)
+ (modules test_init)
+ (libraries xoshiro-simd))
+
+(test
+ (name test_domain)
+ (modules test_domain)
+ (flags :standard -alert -testing)
+ (libraries xoshiro-simd))
+
+;; The /dev/urandom fallback in read_entropy: getrandom_enosys_shim.so is
+;; LD_PRELOADed so every getrandom() and getentropy() fails and the fallback
+;; supplies all the entropy urandom_fallback_probe.exe asks for. Built on every
+;; Unix except macOS, but check_urandom_fallback.sh only runs on Linux and the
+;; BSDs, and skips (exit 0) elsewhere. macOS is excluded from the build too:
+;; the shims define libc's own functions and have never been compiled against
+;; Apple's headers. An executable plus a runtest rule rather than a (test ...)
+;; stanza, because it has to run under the shim.
+(rule
+ (enabled_if
+  (and
+   (= %{os_type} Unix)
+   (<> %{system} macosx)))
+ (targets getrandom_enosys_shim.so)
+ (deps getrandom_enosys_shim.c)
+ (action
+  (run %{cc} -shared -fPIC -o %{targets} %{deps})))
+
+;; The second run's library: getrandom_enosys_shim.c plus
+;; urandom_eintr_shim.c, which makes the first read() from each /dev/urandom
+;; descriptor fail with EINTR. Built by a script because dlsym needs -ldl on
+;; Linux only.
+(rule
+ (enabled_if
+  (and
+   (= %{os_type} Unix)
+   (<> %{system} macosx)))
+ (targets urandom_eintr_shim.so)
+ (deps build_eintr_shim.sh getrandom_enosys_shim.c urandom_eintr_shim.c)
+ (action
+  (run bash build_eintr_shim.sh %{targets} %{cc})))
+
+(executable
+ (name urandom_fallback_probe)
+ (modules urandom_fallback_probe)
+ (libraries xoshiro-simd)
+ (enabled_if
+  (and
+   (= %{os_type} Unix)
+   (<> %{system} macosx))))
+
+(rule
+ (alias runtest)
+ (enabled_if
+  (and
+   (= %{os_type} Unix)
+   (<> %{system} macosx)))
+ (deps
+  check_urandom_fallback.sh
+  getrandom_enosys_shim.so
+  urandom_eintr_shim.so
+  urandom_fallback_probe.exe)
+ (action
+  (run
+   bash
+   check_urandom_fallback.sh
+   getrandom_enosys_shim.so
+   urandom_eintr_shim.so
+   ./urandom_fallback_probe.exe)))
+
+;; Several domains calling set_backend_limit, self_init, reseed and split at
+;; once. Uses Domain directly, so OCaml 5 only.
+(test
+ (name test_domain_concurrent)
+ (modules test_domain_concurrent)
+ (enabled_if
+  (>= %{ocaml_version} 5))
+ (libraries xoshiro-simd))
+
+;; A tree of spawned domains (siblings, nesting, spawning before and after
+;; drawing): every domain's draws are distinct and reproducible from the seed.
+;; Uses Domain directly, so OCaml 5 only.
+(test
+ (name test_domain_tree)
+ (modules test_domain_tree)
+ (enabled_if
+  (>= %{ocaml_version} 5))
+ (libraries xoshiro-simd))
+
+;; Spawning domains reads no OS entropy: the same getrandom_enosys_shim.so
+;; counts the reads with and without spawns. OCaml 5 only, since it needs
+;; domains, and Unix except macOS only, for LD_PRELOAD and the shim.
+(executable
+ (name spawn_entropy_probe)
+ (modules spawn_entropy_probe)
+ (libraries xoshiro-simd)
+ (enabled_if
+  (and
+   (= %{os_type} Unix)
+   (<> %{system} macosx)
+   (>= %{ocaml_version} 5))))
+
+(rule
+ (alias runtest)
+ (enabled_if
+  (and
+   (= %{os_type} Unix)
+   (<> %{system} macosx)
+   (>= %{ocaml_version} 5)))
+ (deps
+  check_spawn_entropy_reads.sh
+  getrandom_enosys_shim.so
+  spawn_entropy_probe.exe)
+ (action
+  (run
+   bash
+   check_spawn_entropy_reads.sh
+   getrandom_enosys_shim.so
+   ./spawn_entropy_probe.exe)))
+
+;; Bigarray.float16 doesn't exist as a type before OCaml 5.2, so this can't
+;; compile unconditionally the way the other kind-specific bigarray tests in
+;; test_primitives.ml do -- see test_float16_bigarray.ml's own comment.
+;;
+;; Deliberately an (executable ...) + (rule (alias runtest) ...) pair
+;; instead of a (test ...) stanza: since dune 3.22.0 (#13081), enabled_if on
+;; a test/tests stanza only controls @runtest inclusion, not whether plain
+;; `dune build` compiles it -- which would break the OCaml-4 build outright,
+;; the exact thing enabled_if here exists to prevent. enabled_if on an
+;; executable stanza still gates compilation itself.
+(executable
+ (name test_float16_bigarray)
+ (modules test_float16_bigarray)
+ (libraries xoshiro-simd)
+ (enabled_if
+  (>= %{ocaml_version} 5.2)))
+
+(rule
+ (alias runtest)
+ (enabled_if
+  (>= %{ocaml_version} 5.2))
+ (deps test_float16_bigarray.exe)
+ (action
+  (run %{deps})))
+
+;; Guards against xs256simd_/xs256simdintf_ symbol-prefix regression: an
+;; unprefixed cross-file C symbol compiles clean and passes every ordinary test,
+;; because nothing about it is wrong until this library is statically linked
+;; into the same native executable as another library that happens to define an
+;; identically-named symbol. Checking the archive's exported symbol list
+;; directly catches a new unprefixed global the moment it's introduced, rather
+;; than waiting for an accidental collision. Runs as part of the default
+;; @runtest alias -- nm is ordinary toolchain tooling, not special host
+;; setup, so there's no reason to gate it behind an opt-in alias.
+(rule
+ (alias runtest)
+ (deps
+  check_exported_symbols.sh
+  ../lib/libxoshiro_simd_stubs.a)
+ (action
+  (run bash check_exported_symbols.sh ../lib/libxoshiro_simd_stubs.a)))
+
+;; Reads the real, dune-generated user_extra_cflags.sexp (produced by the
+;; XOSHIRO_SIMD_EXTRA_CFLAGS rule in lib/dune) and checks it against a
+;; prediction computed independently in the shell, so a typo in the env var
+;; name in lib/dune -- which would silently always resolve to empty -- gets
+;; caught here. Needs no special host setup.
+(rule
+ (alias runtest)
+ (deps
+  check_extra_cflags_dune_wiring.sh
+  ../lib/user_extra_cflags.sexp)
+ (action
+  (run bash check_extra_cflags_dune_wiring.sh ../lib/user_extra_cflags.sexp)))
+
+;; The checks above don't prove every SIMD backend actually *reads*
+;; user_extra_cflags.sexp -- lib/dune has five separate (foreign_stubs ...)
+;; stanzas (baseline + sse2/avx2/avx512fvl/neon), each needing its own
+;; (:include user_extra_cflags.sexp) in its flags list. A missing or
+;; misspelled :include in any one of them would silently mean that backend
+;; alone never receives XOSHIRO_SIMD_EXTRA_CFLAGS, with nothing else able to
+;; catch it. This counts occurrences of each rather than hardcoding a
+;; specific number, so it doesn't need updating when a backend is added or
+;; removed -- only the two counts need to keep matching.
+(rule
+ (alias runtest)
+ (deps
+  check_extra_cflags_include_wiring.sh
+  ../lib/dune)
+ (action
+  (run bash check_extra_cflags_include_wiring.sh ../lib/dune)))

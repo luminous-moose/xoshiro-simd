@@ -1,0 +1,10 @@
+intrange-libs: estimated run time 2m08.0s (8 tests x 16 reps x 1.0s quota)
+Test                                  Mean (ns)  StdDev (ns)  SEM (ns)
+intrange-libs/stdlib-dls                   9.83        1.01      0.25
+intrange-libs/xoshiro-simd-avx2-dls        8.63        1.52      0.38
+intrange-libs/stdlib                       7.41        1.25      0.31
+intrange-libs/gsl                         10.07        1.49      0.37
+intrange-libs/splittable_random           13.70        2.38      0.60
+intrange-libs/pringo                      10.90        0.57      0.14
+intrange-libs/xoshiro                     14.52        3.63      0.91
+intrange-libs/xoshiro-simd-avx2-auto       5.65        1.34      0.33

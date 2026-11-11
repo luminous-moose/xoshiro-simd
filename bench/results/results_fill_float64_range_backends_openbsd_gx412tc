@@ -1,0 +1,7 @@
+# fill_float64_range_bigarray 1024 [-0.5, 0.5]
+fill_float64_range_bigarray-impls: estimated run time 1m04.0s (4 tests x 16 reps x 1.0s quota)
+Test                                                      Mean (ns)  StdDev (ns)  SEM (ns)
+fill_float64_range_bigarray-impls/xoshiro-simd-sse2-dls    11063.37      113.98     28.49
+fill_float64_range_bigarray-impls/xoshiro-simd-plain       20526.84      162.25     40.56
+fill_float64_range_bigarray-impls/xoshiro-simd-sse2-auto   10889.25       82.35     20.59
+fill_float64_range_bigarray-impls/xoshiro-simd-sse2        10955.70       98.94     24.74

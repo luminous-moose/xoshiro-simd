@@ -1,0 +1,9 @@
+float-impls: estimated run time 3m43.0s (7 tests x 16 reps x 1.0s quota, 1.0s sleep between runs)
+Test                                Mean (ns)  StdDev (ns)  SEM (ns)
+float-impls/stdlib-dls                  11.21        0.29      0.07
+float-impls/xoshiro-simd-avx2-dls        8.03        0.38      0.09
+float-impls/stdlib                       7.52        0.17      0.04
+float-impls/xoshiro-simd-plain           5.62        0.18      0.04
+float-impls/xoshiro-simd-avx2-auto       3.26        0.10      0.02
+float-impls/xoshiro-simd-sse2            3.79        0.14      0.03
+float-impls/xoshiro-simd-avx2            3.27        0.17      0.04

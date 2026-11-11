@@ -1,0 +1,9 @@
+bits-impls: estimated run time 1m52.0s (7 tests x 16 reps x 1.0s quota)
+Test                               Mean (ns)  StdDev (ns)  SEM (ns)
+bits-impls/stdlib-dls                   6.83        0.76      0.19
+bits-impls/xoshiro-simd-avx2-dls        6.17        1.17      0.29
+bits-impls/stdlib                       4.36        0.50      0.12
+bits-impls/xoshiro-simd-plain           2.87        0.31      0.08
+bits-impls/xoshiro-simd-avx2-auto       2.44        0.29      0.07
+bits-impls/xoshiro-simd-sse2            2.46        0.35      0.09
+bits-impls/xoshiro-simd-avx2            2.51        0.28      0.07

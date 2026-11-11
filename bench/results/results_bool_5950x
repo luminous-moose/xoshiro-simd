@@ -1,0 +1,8 @@
+bool: estimated run time 1m36.0s (6 tests x 16 reps x 1.0s quota)
+Test                        Mean (ns)  StdDev (ns)  SEM (ns)
+bool/stdlib-dls                  6.68        0.70      0.17
+bool/xoshiro-simd-avx2-dls       6.82        0.91      0.23
+bool/stdlib                      4.46        0.65      0.16
+bool/xoshiro-plain               2.95        0.25      0.06
+bool/xoshiro-simd-sse2           2.52        0.30      0.07
+bool/xoshiro-simd-avx2           2.59        0.33      0.08

@@ -1,0 +1,27 @@
+opam-version: "2.0"
+synopsis: "Dependencies for building and running xoshiro-simd's afl fuzz harness"
+description: """
+Not a package to install or publish -- this exists only to declare the
+extra library needed to build afl/ocaml_fuzz/ (afl-persistent). It has no
+build steps of its own.
+
+Every stanza in afl/ocaml_fuzz/dune is gated with
+`(enabled_if (= %{profile} afl))`, so a plain `dune build` never needs
+afl-persistent (see the root dune file's comment). To build/run the fuzz
+harness: opam install ./xoshiro-simd-afl.opam --deps-only, then from
+within the xoshiro-simd source tree, e.g.
+  dune build --profile afl afl/ocaml_fuzz/harness.exe
+  dune exec --profile afl afl/ocaml_fuzz/harness.exe
+or just `make` / `make fuzz` from afl/ (see afl/Makefile)."""
+maintainer: ["Chris A <onetimerobot@protonmail.com>"]
+authors: ["Chris A <onetimerobot@protonmail.com>"]
+license: "ISC"
+homepage: "https://github.com/luminous-moose/xoshiro-simd"
+dev-repo: "git+https://github.com/luminous-moose/xoshiro-simd.git"
+bug-reports: "https://github.com/luminous-moose/xoshiro-simd/issues"
+depends: [
+  "ocaml" {>= "4.13.0"}
+  "dune" {>= "3.10.0"}
+  "afl-persistent" {>= "1.0"}
+]
+build: []

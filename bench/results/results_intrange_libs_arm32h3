@@ -1,0 +1,9 @@
+intrange-libs: estimated run time 1m52.0s (7 tests x 16 reps x 1.0s quota)
+Test                                  Mean (ns)  StdDev (ns)  SEM (ns)
+intrange-libs/stdlib-dls                 235.82        0.71      0.18
+intrange-libs/xoshiro-simd-neon-dls      145.17        1.33      0.33
+intrange-libs/stdlib                     234.48        1.16      0.29
+intrange-libs/splittable_random         2729.06       12.95      3.24
+intrange-libs/pringo                     374.42        1.32      0.33
+intrange-libs/xoshiro                    337.49        1.50      0.37
+intrange-libs/xoshiro-simd-neon-auto     110.48        0.92      0.23

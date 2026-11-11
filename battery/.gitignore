@@ -1,0 +1,8 @@
+# Downloaded/extracted separately -- see this directory's Makefile for
+# setup steps. Not vendored into git.
+PractRand_*.zip
+practrand_src/
+
+# Build artifacts
+PractRand.a
+practrand_obj/

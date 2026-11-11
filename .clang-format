@@ -1,0 +1,23 @@
+BasedOnStyle: LLVM
+
+IndentWidth: 4
+ColumnLimit: 80
+
+AlignAfterOpenBracket: BlockIndent
+BinPackArguments: false
+BinPackParameters: false
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+
+PenaltyReturnTypeOnItsOwnLine: 1000
+
+PointerAlignment: Left
+DerivePointerAlignment: false
+
+ReflowComments: false
+
+IncludeBlocks: Preserve
+SortIncludes: Never
+
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false

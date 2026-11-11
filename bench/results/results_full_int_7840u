@@ -1,0 +1,14 @@
+full_int: estimated run time 4m47.5s (12 tests x 16 reps x 1.0s quota, 0.5s sleep between runs)
+Test                                 Mean (ns)  StdDev (ns)  SEM (ns)
+full_int/stdlib-dls                       9.24        0.44      0.11
+full_int/xoshiro-simd-avx512fvl-dls       7.41        0.25      0.06
+full_int/stdlib                           6.59        0.93      0.23
+full_int/splittable_random               10.29        0.42      0.10
+full_int/pringo                           9.27        0.40      0.10
+full_int/xoshiro                         19.21        2.09      0.52
+full_int/pringo-dispatch                  9.11        0.71      0.18
+full_int/xoshiro-dispatch                12.65        3.13      0.78
+full_int/xoshiro-simd-plain               5.37        0.38      0.10
+full_int/xoshiro-simd-sse2                4.92        0.40      0.10
+full_int/xoshiro-simd-avx2                5.11        1.75      0.44
+full_int/xoshiro-simd-avx512fvl           4.61        0.35      0.09

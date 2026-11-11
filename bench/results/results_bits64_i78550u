@@ -1,0 +1,8 @@
+bits64: estimated run time 3m11.0s (6 tests x 16 reps x 1.0s quota, 1.0s sleep between runs)
+Test                          Mean (ns)  StdDev (ns)  SEM (ns)
+bits64/stdlib-dls                 11.00        0.96      0.24
+bits64/xoshiro-simd-avx2-dls      12.04        1.15      0.29
+bits64/stdlib                      6.51        0.81      0.20
+bits64/xoshiro                     7.97        0.64      0.16
+bits64/xoshiro-simd-sse2           6.14        0.53      0.13
+bits64/xoshiro-simd-avx2           5.60        0.45      0.11

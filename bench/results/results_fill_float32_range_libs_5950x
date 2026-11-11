@@ -1,0 +1,5 @@
+# fill_float32_range_bigarray 1024 [-0.5, 0.5]
+fill_float32_range_bigarray: estimated run time 32.0s (2 tests x 16 reps x 1.0s quota)
+Test                                                Mean (ns)  StdDev (ns)  SEM (ns)
+fill_float32_range_bigarray/owl                       2092.16      540.87    135.22
+fill_float32_range_bigarray/xoshiro-simd-avx2-auto     178.93        5.69      1.42

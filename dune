@@ -1,0 +1,8 @@
+;; Enable afl instrumentation if and only if the profile "afl" is specified,
+;; with `dune build --profile afl`. Having this specified in the project root
+;; enables it for all subdirs including lib/ and afl/, the two places that need
+;; it for afl fuzzing.
+(env
+ (afl
+  (ocamlopt_flags
+   (:standard -afl-instrument))))

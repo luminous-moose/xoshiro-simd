@@ -1,0 +1,11 @@
+intrange-high-backends: estimated run time 4m11.3s (9 tests x 16 reps x 1.0s quota, 0.8s sleep between runs)
+Test                                                             Mean (ns)  StdDev (ns)  SEM (ns)
+intrange-high-backends/stdlib-dls                                    19.08        0.35      0.09
+intrange-high-backends/xoshiro-simd-avx512fvl-dls                     6.63        0.26      0.07
+intrange-high-backends/stdlib                                        19.13        0.38      0.09
+intrange-high-backends/xoshiro-simd-plain                             6.36        0.20      0.05
+intrange-high-backends/xoshiro-simd-avx512fvl-auto                    5.85        0.57      0.14
+intrange-high-backends/xoshiro-simd-avx512fvl-int_lemire_c-auto       6.87        0.17      0.04
+intrange-high-backends/xoshiro-simd-sse2                              5.86        0.17      0.04
+intrange-high-backends/xoshiro-simd-avx2                              5.76        0.10      0.03
+intrange-high-backends/xoshiro-simd-avx512fvl                         5.80        0.23      0.06

@@ -1,0 +1,7 @@
+intrange-backends: estimated run time 1m20.0s (5 tests x 16 reps x 1.0s quota)
+Test                                                 Mean (ns)  StdDev (ns)  SEM (ns)
+intrange-backends/stdlib-dls                            232.33        0.46      0.11
+intrange-backends/xoshiro-simd-neon-lemire-dls          143.45        3.98      1.00
+intrange-backends/stdlib                                231.76        1.33      0.33
+intrange-backends/xoshiro-simd-lemire-plain             126.21        0.47      0.12
+intrange-backends/xoshiro-simd-neon-int_lemire-auto     109.68        0.88      0.22

@@ -1,0 +1,152 @@
+;; The stanzas below that use the bench-only libraries are gated the same way
+;; as battery/ocaml_battery.exe's (which uses its own `battery` profile):
+;; `(enabled_if (= %{profile} bench))` makes dune skip resolving those
+;; libraries entirely under any other profile (bechamel, gsl,
+;; splittable_random, pringo, xoshiro, owl aren't in xoshiro-simd.opam's
+;; depends), so a plain `dune build` never needs them. Opt in
+;; with `dune build --profile bench` (from here, or `make` in this
+;; directory -- see Makefile).
+
+(library
+ (name dispatch_support)
+ (wrapped false)
+ (modules process)
+ (enabled_if (= %{profile} bench))
+ (libraries base stdio unix))
+
+(library
+ (name bench_support)
+ (wrapped false)
+ (modules
+   bench_common bench_data bench_backend)
+ (enabled_if (= %{profile} bench))
+ (libraries bechamel bechamel.monotonic_clock xoshiro-simd unix dispatch_support))
+
+;; intrange, float, int64 and the bulk fills (fill_float32, fill_float32_range,
+;; fill_float64, fill_float64_range) are each split into a *_libs.ml file
+;; (comparison against other libraries and stdlib) and a *_backends.ml file
+;; (comparison across this project's own backends/algorithm variants and
+;; stdlib). full_int/full_int_30bit/bits30/bits64/bool/int32 aren't split --
+;; not a blanket policy.
+;;
+;; The two stanzas below split on an orthogonal axis: which executables
+;; actually link the third-party comparison libraries (gsl, splittable_random,
+;; pringo, xoshiro) vs. which don't. The intrange, float and int64 *_libs
+;; executables, plus bench_full_int, link them; everything else, including every
+;; *_backends file, doesn't. The bulk-fill *_libs executables compare against Owl
+;; instead, in the last stanza.
+;;
+;; gsl doesn't build on every platform someone might want to run these
+;; benchmarks on (e.g. 32-bit ARM), unlike splittable_random, pringo and
+;; xoshiro. `gsl` in the (libraries ...) list below is kept in sync with
+;; reality by sync_optional_deps.py, run from Makefile before `dune build`,
+;; which removes the literal token if `ocamlfind query gsl` fails, and allows
+;; `make` to work out of the box on a machine without gsl. dune has no way to
+;; make a single entry in a (libraries ...) list conditional on its own --
+;; only `select`, which needs a dedicated file per branch, or `(optional)` on
+;; the whole stanza, which doesn't actually work here. The code-level half
+;; (not referencing `Gsl.*` when gsl isn't there) is cppo, run through a
+;; wrapper script to translate dune's %{lib-available:gsl} into a -D define.
+(executables
+ (names
+  bench_float_libs
+  bench_float_range_libs
+  bench_intrange_libs
+  bench_int64_libs
+  bench_full_int)
+ (modules
+  bench_float_libs
+  bench_float_range_libs
+  bench_intrange_libs
+  bench_int64_libs
+  bench_full_int)
+ (enabled_if (= %{profile} bench))
+ (preprocess
+  (action
+   (run %{dep:cppo_wrapper.sh} %{lib-available:gsl} %{input-file})))
+ (libraries
+  bechamel
+  bechamel.monotonic_clock
+  xoshiro-simd
+  gsl
+  splittable_random
+  pringo
+  xoshiro
+  base
+  bench_support))
+
+(executables
+ (names
+  bench_bits30
+  bench_bits64
+  bench_bool
+  bench_float_backends
+  bench_float_strict_backends
+  bench_float_range_strict_backends
+  bench_float_range_backends
+  bench_intrange_backends
+  bench_intrange_high_backends
+  bench_int32
+  bench_int64_backends
+  bench_full_int_30bit
+  bench_fill_float64_bulk_vs_scalar
+  bench_fill_float64_backends
+  bench_fill_float64_range_backends
+  bench_fill_float32_backends
+  bench_fill_float32_range_backends
+  bench_get_16_bytes
+  bench_get_32_bytes)
+ (modules
+  bench_bits30
+  bench_bits64
+  bench_bool
+  bench_float_backends
+  bench_float_strict_backends
+  bench_float_range_strict_backends
+  bench_float_range_backends
+  bench_intrange_backends
+  bench_intrange_high_backends
+  bench_int32
+  bench_int64_backends
+  bench_full_int_30bit
+  bench_fill_float64_bulk_vs_scalar
+  bench_fill_float64_backends
+  bench_fill_float64_range_backends
+  bench_fill_float32_backends
+  bench_fill_float32_range_backends
+  bench_get_16_bytes
+  bench_get_32_bytes)
+ (enabled_if (= %{profile} bench))
+ (flags :standard -alert -testing)
+ (libraries bechamel bechamel.monotonic_clock xoshiro-simd bench_support))
+
+;; Bulk bigarray fill vs Owl, the only other library I've found that offers
+;; the same in-place uniform fill of Bigarrays. These are in their own stanza
+;; because they only test against Owl and are useless otherwise, so if owl isn't
+;; installed, they don't get built. `(optional)` looks like the right tool
+;; for that and it isn't: tested directly, it does not stop a plain
+;; `dune build`/`@all`/`@default` from hard-erroring "Library not found"
+;; when a (libraries ...) entry is a third-party findlib package that
+;; isn't installed at all. So we add the `true`/`false` literal below and
+;; sync_optional_deps.py keeps it in sync with whether `ocamlfind query owl`
+;; succeeds here. We can't shortcut this by writing
+;; `(enabled_if (and (= %{profile} bench) %{lib-available:owl}))` directly
+;; and dropping the script for this one, as that fails with "Only architecture,
+;; system, model, os_type, ccomp_type, profile, ocaml_version, context_name,
+;; arch_sixtyfour and env variables are allowed in this 'enabled_if'
+;; field".
+(executables
+ (names
+  bench_fill_float32_libs
+  bench_fill_float32_large_libs
+  bench_fill_float64_libs
+  bench_fill_float32_range_libs
+  bench_fill_float64_range_libs)
+ (modules
+  bench_fill_float32_libs
+  bench_fill_float32_large_libs
+  bench_fill_float64_libs
+  bench_fill_float32_range_libs
+  bench_fill_float64_range_libs)
+ (enabled_if (and (= %{profile} bench) true))
+ (libraries bechamel bechamel.monotonic_clock xoshiro-simd owl bench_support))

@@ -1,0 +1,5 @@
+# fill_float64_bigarray vs 1024 individual uniform_float draws
+fill_float64_bigarray_bulk_vs_scalar: estimated run time 1m03.0s (2 tests x 16 reps x 1.0s quota, 1.0s sleep between runs)
+Test                                                                     Mean (ns)  StdDev (ns)  SEM (ns)
+fill_float64_bigarray_bulk_vs_scalar/xoshiro-simd-avx2-scalar-loop-auto    3354.30       82.90     20.73
+fill_float64_bigarray_bulk_vs_scalar/xoshiro-simd-avx2-fill-auto            502.94       15.39      3.85

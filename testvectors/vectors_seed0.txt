@@ -1,0 +1,28 @@
+# xoshiro256++ reference output (unmodified upstream next())
+# splitmix64 seed = 0
+# initial state after splitmix64 seeding:
+# s[0] = 0xe220a8397b1dcdaf
+# s[1] = 0x6e789e6aa1b965f4
+# s[2] = 0x06c45d188009454f
+# s[3] = 0xf88bb8a8724c81ec
+# first 20 outputs of next():
+0x53175d61490b23df
+0x61da6f3dc380d507
+0x5c0fdf91ec9a7bfc
+0x02eebf8c3bbe5e1a
+0x7eca04ebaf4a5eea
+0x0543c37757f08d9a
+0xdb7490c75ab5026e
+0xd87343e6464bc959
+0x4b7da0a02389f0ff
+0x1300fc58c0424c16
+0x5084843206c19968
+0x10ea073de9aa4dfc
+0x1aae554343960cc1
+0x1804139f10fae720
+0x10d790e7b8ac10fa
+0x667d2bffdd1496f7
+0xa04620d3d0fc04a8
+0x1d50881230af9cc3
+0x53be287ded35f698
+0x673235793f7908e1

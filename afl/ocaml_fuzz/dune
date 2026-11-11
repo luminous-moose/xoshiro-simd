@@ -1,0 +1,20 @@
+(library
+ (name fuzz_input)
+ (modules fuzz_input)
+ (enabled_if (= %{profile} afl)))
+
+;; afl-persistent isn't in xoshiro-simd.opam's depends -- gating this keeps
+;; a plain `dune build` from needing it. Opt in with
+;; `dune build --profile afl` (from here, or `make` in this directory --
+;; see afl/ocaml_fuzz/Makefile).
+(executable
+ (name harness)
+ (modules harness)
+ (enabled_if (= %{profile} afl))
+ (libraries xoshiro_simd afl-persistent fuzz_input))
+
+(executable
+ (name decode)
+ (modules decode)
+ (enabled_if (= %{profile} afl))
+ (libraries fuzz_input))

@@ -1,0 +1,10 @@
+float-libs: estimated run time 3m11.5s (8 tests x 16 reps x 1.0s quota, 0.5s sleep between runs)
+Test                                    Mean (ns)  StdDev (ns)  SEM (ns)
+float-libs/stdlib-dls                        7.14        0.20      0.05
+float-libs/xoshiro-simd-avx512fvl-dls        4.96        0.10      0.03
+float-libs/stdlib                            5.09        0.31      0.08
+float-libs/gsl                              10.13        0.76      0.19
+float-libs/splittable_random                 9.00        0.56      0.14
+float-libs/pringo                            8.86        0.26      0.07
+float-libs/xoshiro                          14.68        3.36      0.84
+float-libs/xoshiro-simd-avx512fvl-auto       2.07        0.09      0.02

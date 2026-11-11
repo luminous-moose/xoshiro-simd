@@ -1,0 +1,6 @@
+float-range-strict-impls: estimated run time 1m04.0s (4 tests x 16 reps x 1.0s quota)
+Test                                             Mean (ns)  StdDev (ns)  SEM (ns)
+float-range-strict-impls/xoshiro-simd-sse2-dls      168.10        6.80      1.70
+float-range-strict-impls/xoshiro-simd-plain         146.85        3.88      0.97
+float-range-strict-impls/xoshiro-simd-sse2-auto     136.14        6.70      1.68
+float-range-strict-impls/xoshiro-simd-sse2          139.00        6.29      1.57

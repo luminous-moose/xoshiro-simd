@@ -1,0 +1,12 @@
+== instances in projects/xoshiro-simd/afl/ocaml_fuzz/findings_parallel (is the search finished? look at 'last new coverage')
+  main   ran  127.0 min  execs   1631551  edges  621  cycles   31  last new coverage: 60.0 min before the end
+  s1     ran  125.8 min  execs   2917080  edges  621  cycles   40  last new coverage: 60.0 min before the end
+  s2     ran  128.6 min  execs   1717186  edges  621  cycles    7  last new coverage: 60.0 min before the end
+  s3     ran  137.4 min  execs   1914170  edges  621  cycles    8  last new coverage: 60.0 min before the end
+  s4     ran  146.9 min  execs   2234653  edges  621  cycles    4  last new coverage: 60.0 min before the end
+  s5     ran  186.3 min  execs   4223933  edges  621  cycles    4  last new coverage: 60.0 min before the end
+  s6     ran  158.8 min  execs   5844724  edges  621  cycles    2  last new coverage: 60.0 min before the end
+  s7     ran  131.7 min  execs   1677015  edges  621  cycles   15  last new coverage: 60.0 min before the end
+== findings in projects/xoshiro-simd/afl/ocaml_fuzz/findings_parallel
+crashes: 0
+hangs: 0

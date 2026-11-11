@@ -1,0 +1,10 @@
+int64-impls: estimated run time 3m11.5s (8 tests x 16 reps x 1.0s quota, 0.5s sleep between runs)
+Test                                     Mean (ns)  StdDev (ns)  SEM (ns)
+int64-impls/stdlib-dls                        9.20        0.47      0.12
+int64-impls/xoshiro-simd-avx512fvl-dls        8.11        0.48      0.12
+int64-impls/stdlib                            6.64        0.09      0.02
+int64-impls/xoshiro-simd-plain                6.55        0.35      0.09
+int64-impls/xoshiro-simd-avx512fvl-auto       5.46        0.73      0.18
+int64-impls/xoshiro-simd-sse2                 5.72        0.28      0.07
+int64-impls/xoshiro-simd-avx2                 5.41        0.42      0.11
+int64-impls/xoshiro-simd-avx512fvl            5.86        1.49      0.37
