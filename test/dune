@@ -116,21 +116,27 @@
    ./urandom_fallback_probe.exe)))
 
 ;; Several domains calling set_backend_limit, self_init, reseed and split at
-;; once. Uses Domain directly, so OCaml 5 only.
+;; once. Uses Domain directly, so OCaml 5 only. Needs build_if as well as
+;; enabled_if: since dune 3.22.0, enabled_if on a test stanza only controls
+;; @runtest, so without build_if a plain `dune build` compiles it on OCaml 4.
 (test
  (name test_domain_concurrent)
  (modules test_domain_concurrent)
  (enabled_if
   (>= %{ocaml_version} 5))
+ (build_if
+  (>= %{ocaml_version} 5))
  (libraries xoshiro-simd))
 
 ;; A tree of spawned domains (siblings, nesting, spawning before and after
 ;; drawing): every domain's draws are distinct and reproducible from the seed.
-;; Uses Domain directly, so OCaml 5 only.
+;; Uses Domain directly, so OCaml 5 only (build_if: see test_domain_concurrent).
 (test
  (name test_domain_tree)
  (modules test_domain_tree)
  (enabled_if
+  (>= %{ocaml_version} 5))
+ (build_if
   (>= %{ocaml_version} 5))
  (libraries xoshiro-simd))
 

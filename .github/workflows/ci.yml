@@ -11,8 +11,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # Pinned rather than ubuntu-latest: OCaml 4.13 doesn't build with the
+        # newer runner's GCC (C23 default), and 4.13 is the declared lower bound.
         os:
-          - ubuntu-latest
+          - ubuntu-24.04
           - ubuntu-24.04-arm
         ocaml-compiler:
           - "4.13"
