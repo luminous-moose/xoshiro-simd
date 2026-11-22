@@ -345,7 +345,7 @@ CAMLprim value xs256simdintf_lemire_32bits_byte(value x_v, value bound_v) {
 CAMLprim value
 xs256simdintf_get_bytes(value state_v, value bytes_v, value len_v) {
     uint8_t* buffer = (uint8_t*)Bytes_val(bytes_v);
-    size_t len = Int_val(len_v);
+    size_t len = (size_t)Long_val(len_v);
 #if XS256_BIG_ENDIAN
     xs256simd_fill_bytes_be_int8(Xs256_state_val(state_v), buffer, len);
 #else  // !XS256_BIG_ENDIAN
